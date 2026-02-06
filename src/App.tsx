@@ -1,20 +1,22 @@
 import React, { useState, useEffect } from 'react';
 
-// This is the "Ultra-Safe" version designed to pass strict TypeScript checks
 const App: React.FC = () => {
+  // --- LEVEL 1 STORAGE SETUP ---
+  // Step: Paste your Formspree URL between the quotes on the line below!
+  const FORMSPREE_URL = "PASTE_YOUR_FORMSPREE_URL_HERE";
+
   const [isSimulating, setIsSimulating] = useState<boolean>(false);
-  // We tell the computer these are "strings" (text) to fix the 'never' error
   const [simulatedMessages, setSimulatedMessages] = useState<string[]>([]);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [email, setEmail] = useState<string>('');
   const [submitted, setSubmitted] = useState<boolean>(false);
+  const [isSending, setIsSending] = useState<boolean>(false);
 
   useEffect(() => {
     if (isSimulating) {
       const interval = setInterval(() => {
         setSimulatedMessages(prev => {
           const newMessage = `Happy Birthday! 🎈 #${Math.floor(Math.random() * 100)}`;
-          // This keeps the last 5 messages
           const next = [newMessage, ...prev];
           return next.slice(0, 5);
         });
@@ -23,13 +25,29 @@ const App: React.FC = () => {
     }
   }, [isSimulating]);
 
-  // We type the 'e' as a Form Event to stop the 'any' error
-  const handleWaitlistSubmit = (e: React.FormEvent) => {
+  const handleWaitlistSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setIsSending(true);
+
+    try {
+      const response = await fetch(FORMSPREE_URL, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email })
+      });
+
+      if (response.ok) {
+        setSubmitted(true);
+      } else {
+        alert("Server error. Please check your Formspree URL!");
+      }
+    } catch (error) {
+      alert("Connection error. Check your internet!");
+    } finally {
+      setIsSending(false);
+    }
   };
 
-  // Simple styles defined as a constant
   const containerStyle: React.CSSProperties = { 
     fontFamily: 'sans-serif', 
     minHeight: '100vh', 
@@ -87,27 +105,36 @@ const App: React.FC = () => {
       </div>
 
       {showModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
           <div style={{ background: 'white', padding: '40px', borderRadius: '20px', maxWidth: '300px', width: '90%' }}>
             {!submitted ? (
               <form onSubmit={handleWaitlistSubmit}>
-                <h2 style={{ margin: '0 0 10px 0' }}>Join the List</h2>
+                <h2 style={{ margin: '0 0 10px 0', fontWeight: 900 }}>Join the List</h2>
+                <p style={{ color: '#666', fontSize: '12px', marginBottom: '15px' }}>Get your first barrage for $1.</p>
                 <input 
                   required
                   type="email" 
+                  name="email"
                   placeholder="Email address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  style={{ width: '100%', padding: '10px', marginBottom: '15px', borderRadius: '5px', border: '1px solid #ddd' }}
+                  style={{ width: '100%', padding: '15px', marginBottom: '15px', borderRadius: '10px', border: '1px solid #ddd', boxSizing: 'border-box' }}
                 />
-                <button type="submit" style={{ width: '100%', background: '#4f46e5', color: 'white', border: 'none', padding: '12px', borderRadius: '5px', fontWeight: 'bold' }}>Claim My $1 Spot</button>
-                <button onClick={() => setShowModal(false)} type="button" style={{ background: 'none', border: 'none', color: '#999', marginTop: '10px', cursor: 'pointer' }}>Close</button>
+                <button 
+                  disabled={isSending}
+                  type="submit" 
+                  style={{ width: '100%', background: '#4f46e5', color: 'white', border: 'none', padding: '15px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', opacity: isSending ? 0.7 : 1 }}
+                >
+                  {isSending ? "Sending..." : "Claim My $1 Spot"}
+                </button>
+                <button onClick={() => setShowModal(false)} type="button" style={{ background: 'none', border: 'none', color: '#999', marginTop: '15px', cursor: 'pointer' }}>Close</button>
               </form>
             ) : (
               <div>
-                <h2>✅ You're In!</h2>
-                <p>We'll email you soon.</p>
-                <button onClick={() => setShowModal(false)} style={{ background: '#4f46e5', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '5px' }}>Awesome</button>
+                <div style={{ fontSize: '40px', marginBottom: '10px' }}>✅</div>
+                <h2 style={{ fontWeight: 900 }}>You're In!</h2>
+                <p style={{ color: '#666', marginBottom: '20px' }}>We'll email you soon.</p>
+                <button onClick={() => setShowModal(false)} style={{ background: '#4f46e5', color: 'white', border: 'none', padding: '10px 30px', borderRadius: '10px', fontWeight: 'bold' }}>Awesome</button>
               </div>
             )}
           </div>
