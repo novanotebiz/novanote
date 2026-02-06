@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 
 const App: React.FC = () => {
   // --- LEVEL 1 STORAGE SETUP ---
-  // Step: Paste your Formspree URL between the quotes on the line below!
-  const FORMSPREE_URL = "PASTE_YOUR_FORMSPREE_URL_HERE";
+  // Step: Paste your FULL Formspree URL below. 
+  // It should look exactly like "https://formspree.io/f/mqaknzqp"
+  const FORMSPREE_URL = "https://formspree.io/f/maqdywan";
 
   const [isSimulating, setIsSimulating] = useState<boolean>(false);
   const [simulatedMessages, setSimulatedMessages] = useState<string[]>([]);
@@ -30,19 +31,27 @@ const App: React.FC = () => {
     setIsSending(true);
 
     try {
+      // We are using a simpler fetch method that is more reliable for beginners
       const response = await fetch(FORMSPREE_URL, {
         method: 'POST',
-        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email })
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: email,
+          message: "New Waitlist Signup"
+        })
       });
 
       if (response.ok) {
         setSubmitted(true);
       } else {
-        alert("Server error. Please check your Formspree URL!");
+        const errorData = await response.json();
+        console.error("Formspree Error:", errorData);
+        alert("Waitlist error. Check your Formspree URL and check your email for a confirmation link from Formspree!");
       }
     } catch (error) {
-      alert("Connection error. Check your internet!");
+      alert("Network error. Please try again.");
     } finally {
       setIsSending(false);
     }
@@ -106,7 +115,7 @@ const App: React.FC = () => {
 
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: 'white', padding: '40px', borderRadius: '20px', maxWidth: '300px', width: '90%' }}>
+          <div style={{ background: 'white', padding: '40px', borderRadius: '20px', maxWidth: '350px', width: '90%' }}>
             {!submitted ? (
               <form onSubmit={handleWaitlistSubmit}>
                 <h2 style={{ margin: '0 0 10px 0', fontWeight: 900 }}>Join the List</h2>
@@ -118,22 +127,22 @@ const App: React.FC = () => {
                   placeholder="Email address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  style={{ width: '100%', padding: '15px', marginBottom: '15px', borderRadius: '10px', border: '1px solid #ddd', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '15px', marginBottom: '15px', borderRadius: '10px', border: '2px solid #ddd', boxSizing: 'border-box', fontSize: '16px' }}
                 />
                 <button 
                   disabled={isSending}
                   type="submit" 
-                  style={{ width: '100%', background: '#4f46e5', color: 'white', border: 'none', padding: '15px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', opacity: isSending ? 0.7 : 1 }}
+                  style={{ width: '100%', background: '#4f46e5', color: 'white', border: 'none', padding: '15px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', opacity: isSending ? 0.7 : 1, fontSize: '16px' }}
                 >
                   {isSending ? "Sending..." : "Claim My $1 Spot"}
                 </button>
-                <button onClick={() => setShowModal(false)} type="button" style={{ background: 'none', border: 'none', color: '#999', marginTop: '15px', cursor: 'pointer' }}>Close</button>
+                <button onClick={() => setShowModal(false)} type="button" style={{ background: 'none', border: 'none', color: '#999', marginTop: '15px', cursor: 'pointer', fontSize: '14px' }}>Close</button>
               </form>
             ) : (
               <div>
                 <div style={{ fontSize: '40px', marginBottom: '10px' }}>✅</div>
                 <h2 style={{ fontWeight: 900 }}>You're In!</h2>
-                <p style={{ color: '#666', marginBottom: '20px' }}>We'll email you soon.</p>
+                <p style={{ color: '#666', marginBottom: '20px' }}>Check your email soon.</p>
                 <button onClick={() => setShowModal(false)} style={{ background: '#4f46e5', color: 'white', border: 'none', padding: '10px 30px', borderRadius: '10px', fontWeight: 'bold' }}>Awesome</button>
               </div>
             )}
