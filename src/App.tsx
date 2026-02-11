@@ -2,164 +2,164 @@ import React, { useState, useEffect } from 'react';
 
 const App: React.FC = () => {
   // ==========================================
-  // 1. PASTE YOUR FORMSPREE LINK HERE:
-  const FORMSPREE_URL = "PASTE_YOUR_FORMSPREE_URL_HERE";
+  // 1. YOUR FORMSPREE LINK (Inside the quotes)
+  const FORMSPREE_URL = "https://formspree.io/f/maqdywan";
 
-  // 2. PASTE YOUR STRIPE LINK HERE:
-  const STRIPE_LINK = "PASTE_YOUR_STRIPE_LINK_HERE";
+  // 2. YOUR STRIPE LINK (Inside the quotes)
+  const STRIPE_LINK = "https://buy.stripe.com/00w5kDeim1543Jy8jtfQI01";
   // ==========================================
 
-  const [isSimulating, setIsSimulating] = useState<boolean>(false);
-  const [simulatedMessages, setSimulatedMessages] = useState<string[]>([]);
-  const [showModal, setShowModal] = useState<boolean>(false);
-  const [email, setEmail] = useState<string>('');
-  const [submitted, setSubmitted] = useState<boolean>(false);
-  const [isSending, setIsSending] = useState<boolean>(false);
-  const [spotsLeft, setSpotsLeft] = useState(84);
+  // --- STATE ---
+  const [email, setEmail] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [simMessages, setSimMessages] = useState<string[]>([]);
+  const [isSimulating, setIsSimulating] = useState(false);
 
+  // Check for the success redirect from Stripe
   useEffect(() => {
-    if (isSimulating) {
-      const interval = setInterval(() => {
-        setSimulatedMessages(prev => {
-          const newMessage = `Happy Birthday! 🎈 #${Math.floor(Math.random() * 100)}`;
-          const next = [newMessage, ...prev];
-          return next.slice(0, 6);
-        });
-      }, 700);
-      return () => clearInterval(interval);
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('status') === 'success') {
+        setIsSuccess(true);
+      }
     }
-  }, [isSimulating]);
+  }, []);
 
-  const handleWaitlistSubmit = async (e: React.FormEvent) => {
+  // Handle the text "explosion" simulation
+  useEffect(() => {
+    let interval: any;
+    if (isSimulating || isSuccess) {
+      interval = setInterval(() => {
+        setSimMessages(prev => {
+          const id = Math.floor(Math.random() * 900) + 100;
+          const msg = isSuccess ? `Founder #${id} Verified ✅` : `Happy Birthday! 🎈 #${id}`;
+          return [msg, ...prev].slice(0, 5);
+        });
+      }, 800);
+    }
+    return () => clearInterval(interval);
+  }, [isSimulating, isSuccess]);
+
+  // Submit email to Formspree
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!FORMSPREE_URL || FORMSPREE_URL.includes("PASTE")) {
+      alert("Please add your Formspree URL at the top of the code!");
+      return;
+    }
     setIsSending(true);
     try {
       const response = await fetch(FORMSPREE_URL, {
         method: 'POST',
-        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email, type: "Founders Club Lead" })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, tag: "Founder_Lead" })
       });
       if (response.ok) {
         setSubmitted(true);
-        setSpotsLeft(prev => prev - 1);
-      } else {
-        alert("Waitlist error. Check your Formspree URL!");
       }
-    } catch (error) {
-      alert("Connection error.");
+    } catch (err) {
+      console.error(err);
     } finally {
       setIsSending(false);
     }
   };
 
-  const handlePaymentRedirect = () => {
-    if (STRIPE_LINK.includes("stripe.com")) {
-      window.location.href = STRIPE_LINK;
-    } else {
-      alert("Stripe link is missing!");
+  // Redirect to Stripe
+  const handlePay = () => {
+    if (!STRIPE_LINK || STRIPE_LINK.includes("PASTE")) {
+      alert("Please add your Stripe Link at the top of the code!");
+      return;
     }
+    window.location.href = STRIPE_LINK;
   };
 
-  return (
-    <div style={{ fontFamily: '-apple-system, system-ui, sans-serif', minHeight: '100vh', backgroundColor: '#fff', color: '#111', padding: '0', margin: '0' }}>
-      
-      {/* Header */}
-      <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 20px', borderBottom: '1px solid #f0f0f0', position: 'sticky', top: 0, backgroundColor: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(10px)', zIndex: 100 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: '32px', height: '32px', background: '#4f46e5', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polyline></svg>
+  // --- STYLES ---
+  const pageStyle: React.CSSProperties = {
+    fontFamily: '-apple-system, system-ui, sans-serif',
+    minHeight: '100vh',
+    backgroundColor: isSuccess ? '#4f46e5' : '#fff',
+    color: isSuccess ? '#fff' : '#111',
+    margin: 0,
+    padding: '20px',
+    textAlign: 'center'
+  };
+
+  // --- SUCCESS VIEW ---
+  if (isSuccess) {
+    return (
+      <div style={pageStyle}>
+        <div style={{ marginTop: '100px' }}>
+          <div style={{ fontSize: '60px' }}>⚡️</div>
+          <h1 style={{ fontSize: '40px', fontWeight: 900 }}>YOU'RE A FOUNDER</h1>
+          <p style={{ fontSize: '18px', opacity: 0.9 }}>Check your email. We will contact you soon.</p>
+          <div style={{ background: 'rgba(0,0,0,0.2)', padding: '20px', borderRadius: '20px', margin: '20px auto', maxWidth: '300px', textAlign: 'left' }}>
+            {simMessages.map((m, i) => <div key={i} style={{ fontSize: '12px', marginBottom: '5px' }}>{m}</div>)}
           </div>
-          <span style={{ fontWeight: 900, fontSize: '18px', letterSpacing: '-0.5px' }}>NOVANOTE</span>
+          <button onClick={() => window.location.href = window.location.origin} style={{ padding: '15px 30px', borderRadius: '30px', border: 'none', background: '#fff', color: '#4f46e5', fontWeight: 'bold', cursor: 'pointer' }}>Back to Home</button>
         </div>
-        <div style={{ fontSize: '11px', background: '#fee2e2', color: '#dc2626', padding: '4px 10px', borderRadius: '20px', fontWeight: '800' }}>
-          {spotsLeft} SPOTS LEFT
-        </div>
+      </div>
+    );
+  }
+
+  // --- MAIN VIEW ---
+  return (
+    <div style={pageStyle}>
+      <nav style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', paddingBottom: '15px' }}>
+        <div style={{ fontWeight: 900, color: '#4f46e5' }}>⚡ NOVANOTE</div>
+        <div style={{ fontSize: '10px', background: '#fee2e2', color: '#b91c1c', padding: '5px 10px', borderRadius: '20px', fontWeight: 'bold' }}>84 SPOTS LEFT</div>
       </nav>
 
-      <main style={{ padding: '40px 20px', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '44px', fontWeight: 900, letterSpacing: '-1.5px', lineHeight: '1', marginBottom: '15px' }}>
-          The $1 <span style={{ color: '#4f46e5' }}>Birthday</span> Barrage.
-        </h1>
-        <p style={{ color: '#666', fontSize: '18px', maxWidth: '350px', margin: '0 auto 30px auto', lineHeight: '1.4' }}>
-          Why send a card when you can send a notification explosion? ⚡️
-        </p>
-
+      <div style={{ marginTop: '60px' }}>
+        <h1 style={{ fontSize: '42px', fontWeight: 900, marginBottom: '10px' }}>THE $1 <span style={{ color: '#4f46e5' }}>FOUNDER</span> SPOT.</h1>
+        <p style={{ color: '#666', marginBottom: '30px' }}>Send 100 texts at once. Secure your beta spot.</p>
+        
         <button 
           onClick={() => setShowModal(true)}
-          style={{ width: '100%', maxWidth: '300px', background: '#4f46e5', color: 'white', border: 'none', padding: '20px', borderRadius: '16px', fontWeight: 'bold', fontSize: '18px', cursor: 'pointer', boxShadow: '0 10px 25px rgba(79, 70, 229, 0.3)' }}
+          style={{ background: '#4f46e5', color: 'white', border: 'none', padding: '18px 40px', borderRadius: '40px', fontWeight: 'bold', fontSize: '18px', cursor: 'pointer' }}
         >
-          Secure My $1 Spot
+          Join the Beta
         </button>
 
-        {/* Demo Device */}
-        <div style={{ background: '#000', width: '260px', height: '450px', margin: '50px auto', borderRadius: '40px', border: '8px solid #1a1a1a', padding: '20px', overflow: 'hidden', boxShadow: '0 30px 60px rgba(0,0,0,0.12)', position: 'relative' }}>
-          <div style={{ fontSize: '10px', color: '#333', marginBottom: '20px', fontWeight: 'bold' }}>LIVE PREVIEW</div>
-          <div style={{ height: '330px', overflow: 'hidden' }}>
-            {simulatedMessages.map((msg, i) => (
-              <div key={i} style={{ background: '#4f46e5', color: 'white', padding: '10px 14px', borderRadius: '14px', marginBottom: '8px', fontSize: '12px', textAlign: 'left', animation: 'pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards' }}>
-                {msg}
-              </div>
-            ))}
-            {simulatedMessages.length === 0 && (
-              <div 
-                onMouseEnter={() => setIsSimulating(true)}
-                onTouchStart={() => setIsSimulating(true)}
-                style={{ marginTop: '140px', color: '#555', fontSize: '14px', cursor: 'pointer' }}
-              >
-                [ Tap to Test ]
-              </div>
-            )}
-          </div>
+        {/* Demo Phone */}
+        <div style={{ background: '#000', width: '240px', height: '400px', margin: '50px auto', borderRadius: '35px', border: '8px solid #222', padding: '20px', overflow: 'hidden' }}>
+          {simMessages.map((m, i) => (
+            <div key={i} style={{ background: '#4f46e5', color: 'white', padding: '8px', borderRadius: '10px', marginBottom: '10px', fontSize: '11px', textAlign: 'left' }}>{m}</div>
+          ))}
+          {simMessages.length === 0 && (
+            <div 
+              onMouseEnter={() => setIsSimulating(true)} 
+              onMouseLeave={() => { setIsSimulating(false); setSimMessages([]); }}
+              style={{ marginTop: '150px', color: '#444', fontSize: '12px', cursor: 'pointer' }}
+            >
+              [ Hover to Test ]
+            </div>
+          )}
         </div>
+      </div>
 
-        {/* How it Works Section */}
-        <div style={{ marginTop: '60px', textAlign: 'left', maxWidth: '400px', margin: '60px auto' }}>
-          <h3 style={{ fontWeight: 900, fontSize: '20px', marginBottom: '20px' }}>How NovaNote Works</h3>
-          <div style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
-            <div style={{ minWidth: '30px', height: '30px', background: '#eee', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>1</div>
-            <p style={{ margin: 0, color: '#444' }}><strong>Join the Founders Club:</strong> Pay $1 today to lock in your lifetime discount and beta access.</p>
-          </div>
-          <div style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
-            <div style={{ minWidth: '30px', height: '30px', background: '#eee', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>2</div>
-            <p style={{ margin: 0, color: '#444' }}><strong>Schedule the Chaos:</strong> Pick a date, time, and target phone number.</p>
-          </div>
-          <div style={{ display: 'flex', gap: '15px' }}>
-            <div style={{ minWidth: '30px', height: '30px', background: '#eee', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>3</div>
-            <p style={{ margin: 0, color: '#444' }}><strong>Watch the Magic:</strong> At the exact minute, we send a barrage of 100+ celebratory texts.</p>
-          </div>
-        </div>
-      </main>
-
-      {/* Modal Overlay */}
       {showModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
-          <div style={{ background: 'white', padding: '30px', borderRadius: '24px', maxWidth: '340px', width: '100%', textAlign: 'center' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: 'white', padding: '40px', borderRadius: '25px', maxWidth: '320px', width: '90%' }}>
             {!submitted ? (
-              <form onSubmit={handleWaitlistSubmit}>
-                <h2 style={{ fontWeight: 900, marginBottom: '8px' }}>Step 1 of 2</h2>
-                <p style={{ color: '#666', fontSize: '14px', marginBottom: '20px' }}>Where should we send your invite?</p>
-                <input required type="email" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} style={{ width: '100%', padding: '16px', marginBottom: '12px', borderRadius: '12px', border: '2px solid #eee', outline: 'none', fontSize: '16px' }} />
-                <button type="submit" disabled={isSending} style={{ width: '100%', background: '#4f46e5', color: 'white', border: 'none', padding: '16px', borderRadius: '12px', fontWeight: 'bold', fontSize: '16px' }}>{isSending ? "Saving..." : "Continue →"}</button>
-                <button onClick={() => setShowModal(false)} type="button" style={{ marginTop: '15px', background: 'none', border: 'none', color: '#999', fontSize: '13px' }}>Close</button>
+              <form onSubmit={handleSubmit}>
+                <h2 style={{ fontWeight: 900, marginBottom: '10px' }}>Step 1: Email</h2>
+                <input required type="email" placeholder="you@email.com" value={email} onChange={e => setEmail(e.target.value)} style={{ width: '100%', padding: '15px', marginBottom: '15px', borderRadius: '15px', border: '2px solid #eee', boxSizing: 'border-box' }} />
+                <button type="submit" disabled={isSending} style={{ width: '100%', background: '#4f46e5', color: 'white', border: 'none', padding: '15px', borderRadius: '15px', fontWeight: 'bold', cursor: 'pointer' }}>{isSending ? 'Saving...' : 'Next →'}</button>
               </form>
             ) : (
               <div>
-                <h2 style={{ fontWeight: 900, marginBottom: '8px' }}>Final Step</h2>
-                <p style={{ color: '#666', fontSize: '14px', marginBottom: '25px' }}>Email saved. Now, pay your $1 to officially lock in your spot in the Founders Club.</p>
-                <button onClick={handlePaymentRedirect} style={{ width: '100%', background: '#000', color: 'white', border: 'none', padding: '18px', borderRadius: '12px', fontWeight: 'bold', fontSize: '16px' }}>Pay $1 via Stripe</button>
-                <button onClick={() => setShowModal(false)} style={{ marginTop: '15px', background: 'none', border: 'none', color: '#4f46e5', fontWeight: 'bold', fontSize: '13px' }}>I'll pay later</button>
+                <h2 style={{ fontWeight: 900, marginBottom: '10px' }}>Step 2: Payment</h2>
+                <p style={{ color: '#666', marginBottom: '20px' }}>Email saved! Pay $1 to lock in your spot.</p>
+                <button onClick={handlePay} style={{ width: '100%', background: '#000', color: 'white', border: 'none', padding: '15px', borderRadius: '15px', fontWeight: 'bold', cursor: 'pointer' }}>Pay $1 via Stripe</button>
               </div>
             )}
+            <button onClick={() => setShowModal(false)} style={{ marginTop: '15px', background: 'none', border: 'none', color: '#999', cursor: 'pointer' }}>Close</button>
           </div>
         </div>
       )}
-
-      <style>{`
-        @keyframes pop {
-          0% { transform: scale(0.8); opacity: 0; }
-          100% { transform: scale(1); opacity: 1; }
-        }
-      `}</style>
     </div>
   );
 };
