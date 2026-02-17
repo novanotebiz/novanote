@@ -1,102 +1,94 @@
 import React, { useState } from 'react';
 
+type PayloadTier = 'spark' | 'blast';
+type TimingTier = 'anytime' | 'window' | 'exact';
+
 export default function App() {
-  // --- CONFIGURATION ---
-  // Replace the ID below. Ensure the quotes are STRAIGHT " and not CURVED ”
   const FORMSPREE_ID: string = "https://formspree.io/f/maqdywan";
   const spotsLeft: number = 12;
 
-  // --- STATE ---
   const [step, setStep] = useState<number>(1);
-  const [tier, setTier] = useState<string>('spark');
-  const [timing, setTiming] = useState<string>('anytime');
+  const [tier, setTier] = useState<PayloadTier>('spark');
+  const [timing, setTiming] = useState<TimingTier>('anytime');
   const [email, setEmail] = useState<string>('');
   const [phone, setPhone] = useState<string>('');
   const [time, setTime] = useState<string>('');
 
-  // --- PRICING FUNCTION (Safer for TypeScript than a lookup table) ---
   const calculateTotal = (): number => {
-    let total = 0;
-    // Base Tier
-    if (tier === 'blast') { total += 5; } else { total += 1; }
-    // Timing Add-on
-    if (timing === 'window') { total += 1; }
-    else if (timing === 'exact') { total += 5; }
-    return total;
+    let cost = tier === 'blast' ? 5 : 1;
+    if (timing === 'window') cost += 1;
+    if (timing === 'exact') cost += 5;
+    return cost;
   };
 
-  const totalPrice = calculateTotal();
-
-  // --- NAVIGATION ---
-  const next = () => { setStep(s => s + 1); window.scrollTo(0, 0); };
-  const back = () => { setStep(s => s - 1); window.scrollTo(0, 0); };
+  const total: number = calculateTotal();
+  const next = (): void => { setStep(s => s + 1); window.scrollTo(0, 0); };
+  const back = (): void => { setStep(s => s - 1); window.scrollTo(0, 0); };
 
   return (
-    <div style={{ backgroundColor: '#020617', color: '#f8fafc', minHeight: '100vh', fontFamily: 'sans-serif', padding: '24px' }}>
+    <div style={{ backgroundColor: '#020617', color: '#f8fafc', minHeight: '100vh', fontFamily: 'sans-serif', padding: '20px' }}>
       <div style={{ maxWidth: '400px', margin: '0 auto' }}>
-        
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
-          <div style={{ fontWeight: 'bold', fontSize: '24px', fontStyle: 'italic' }}>⚡ NOVANOTE</div>
-          <div style={{ fontSize: '10px', backgroundColor: '#312e81', color: '#818cf8', padding: '4px 12px', borderRadius: '99px', border: '1px solid #3730a3' }}>
-             {spotsLeft} SPOTS LEFT
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '40px' }}>
+          <div style={{ fontWeight: 'bold', fontSize: '20px' }}>⚡ NOVANOTE</div>
+          <div style={{ fontSize: '10px', color: '#818cf8', border: '1px solid #312e81', padding: '4px 10px', borderRadius: '20px' }}>
+            {spotsLeft} SPOTS LEFT
           </div>
         </div>
 
-        {/* Step 1: Payload */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '32px' }}>
+          <div style={{ height: '4px', flex: 1, backgroundColor: step >= 1 ? '#6366f1' : '#1e293b', borderRadius: '2px' }}></div>
+          <div style={{ height: '4px', flex: 1, backgroundColor: step >= 2 ? '#6366f1' : '#1e293b', borderRadius: '2px' }}></div>
+          <div style={{ height: '4px', flex: 1, backgroundColor: step >= 3 ? '#6366f1' : '#1e293b', borderRadius: '2px' }}></div>
+        </div>
+
         {step === 1 && (
           <div>
-            <h1 style={{ fontSize: '32px', fontWeight: '900', fontStyle: 'italic', marginBottom: '8px' }}>THE PAYLOAD</h1>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '24px' }}>
-              <button type="button" onClick={() => setTier('spark')} style={{ textAlign: 'left', padding: '24px', borderRadius: '16px', border: tier === 'spark' ? '2px solid #6366f1' : '1px solid #1e293b', backgroundColor: '#0f172a', color: 'white' }}>
-                <div style={{ fontWeight: 'bold' }}>The Spark ($1)</div>
-                <div style={{ fontSize: '12px', color: '#94a3b8' }}>25 celebration texts.</div>
-              </button>
-              <button type="button" onClick={() => setTier('blast')} style={{ textAlign: 'left', padding: '24px', borderRadius: '16px', border: tier === 'blast' ? '2px solid #6366f1' : '1px solid #1e293b', backgroundColor: '#0f172a', color: 'white' }}>
-                <div style={{ fontWeight: 'bold' }}>The Blast ($5)</div>
-                <div style={{ fontSize: '12px', color: '#94a3b8' }}>100+ texts + emojis.</div>
-              </button>
-            </div>
-            <button onClick={next} style={{ width: '100%', padding: '20px', backgroundColor: '#4f46e5', color: 'white', borderRadius: '12px', marginTop: '24px', border: 'none', fontWeight: 'bold' }}>SET TIMING</button>
+            <h1 style={{ fontSize: '30px', fontWeight: 'bold', marginBottom: '20px' }}>THE PAYLOAD</h1>
+            <button onClick={() => setTier('spark')} style={{ width: '100%', padding: '20px', marginBottom: '10px', borderRadius: '15px', border: tier === 'spark' ? '2px solid #6366f1' : '1px solid #1e293b', backgroundColor: '#0f172a', color: 'white', textAlign: 'left' }}>
+               <b>The Spark ($1)</b><br/><small style={{color:'#94a3b8'}}>25 texts</small>
+            </button>
+            <button onClick={() => setTier('blast')} style={{ width: '100%', padding: '20px', marginBottom: '20px', borderRadius: '15px', border: tier === 'blast' ? '2px solid #6366f1' : '1px solid #1e293b', backgroundColor: '#0f172a', color: 'white', textAlign: 'left' }}>
+               <b>The Blast ($5)</b><br/><small style={{color:'#94a3b8'}}>100+ texts</small>
+            </button>
+            <button onClick={next} style={{ width: '100%', padding: '15px', backgroundColor: '#4f46e5', border: 'none', borderRadius: '10px', color: 'white', fontWeight: 'bold' }}>NEXT</button>
           </div>
         )}
 
-        {/* Step 2: Timing */}
         {step === 2 && (
           <div>
-            <h1 style={{ fontSize: '32px', fontWeight: '900', fontStyle: 'italic', marginBottom: '8px' }}>TIMING</h1>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '24px' }}>
-              <button type="button" onClick={() => setTiming('anytime')} style={{ padding: '20px', borderRadius: '12px', border: timing === 'anytime' ? '2px solid #6366f1' : '1px solid #1e293b', backgroundColor: '#0f172a', color: 'white' }}>Standard (Free)</button>
-              <button type="button" onClick={() => setTiming('window')} style={{ padding: '20px', borderRadius: '12px', border: timing === 'window' ? '2px solid #6366f1' : '1px solid #1e293b', backgroundColor: '#0f172a', color: 'white' }}>Window (+$1)</button>
-              <button type="button" onClick={() => setTiming('exact')} style={{ padding: '20px', borderRadius: '12px', border: timing === 'exact' ? '2px solid #6366f1' : '1px solid #1e293b', backgroundColor: '#0f172a', color: 'white' }}>Exact (+$5)</button>
+            <h1 style={{ fontSize: '30px', fontWeight: 'bold', marginBottom: '20px' }}>TIMING</h1>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+              <button onClick={() => setTiming('anytime')} style={{ padding: '15px', border: timing === 'anytime' ? '2px solid #6366f1' : '1px solid #1e293b', backgroundColor: '#0f172a', color: 'white', borderRadius: '10px' }}>Standard (Free)</button>
+              <button onClick={() => setTiming('window')} style={{ padding: '15px', border: timing === 'window' ? '2px solid #6366f1' : '1px solid #1e293b', backgroundColor: '#0f172a', color: 'white', borderRadius: '10px' }}>Window (+$1)</button>
+              <button onClick={() => setTiming('exact')} style={{ padding: '15px', border: timing === 'exact' ? '2px solid #6366f1' : '1px solid #1e293b', backgroundColor: '#0f172a', color: 'white', borderRadius: '10px' }}>Exact (+$5)</button>
             </div>
             {timing !== 'anytime' && (
-              <input type="time" value={time} onChange={(e) => setTime(e.target.value)} style={{ width: '100%', padding: '16px', marginTop: '16px', backgroundColor: '#0f172a', border: '1px solid #1e293b', color: 'white', borderRadius: '8px' }} />
+              <input type="time" value={time} onChange={e => setTime(e.target.value)} style={{ width: '100%', padding: '15px', backgroundColor: '#0f172a', border: '1px solid #1e293b', color: 'white', borderRadius: '10px', marginBottom: '20px' }} />
             )}
-            <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
-              <button type="button" onClick={back} style={{ flex: 1, padding: '16px', backgroundColor: '#1e293b', color: 'white', borderRadius: '12px', border: 'none' }}>BACK</button>
-              <button type="button" onClick={next} style={{ flex: 2, padding: '16px', backgroundColor: '#4f46e5', color: 'white', borderRadius: '12px', border: 'none' }}>LOGISTICS</button>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button onClick={back} style={{ flex: 1, padding: '15px', backgroundColor: '#1e293b', border: 'none', borderRadius: '10px', color: 'white' }}>BACK</button>
+              <button onClick={next} style={{ flex: 2, padding: '15px', backgroundColor: '#4f46e5', border: 'none', borderRadius: '10px', color: 'white' }}>CONTINUE</button>
             </div>
           </div>
         )}
 
-        {/* Step 3: Logistics */}
         {step === 3 && (
-          <form action={`https://formspree.io/f/${FORMSPREE_ID}`} method="POST">
-            <h1 style={{ fontSize: '32px', fontWeight: '900', fontStyle: 'italic', marginBottom: '8px' }}>LOGISTICS</h1>
+          <form action={"https://formspree.io/f/" + FORMSPREE_ID} method="POST">
+            <h1 style={{ fontSize: '30px', fontWeight: 'bold', marginBottom: '20px' }}>LOGISTICS</h1>
             <input type="hidden" name="Tier" value={tier} />
             <input type="hidden" name="Timing" value={timing} />
-            <input type="hidden" name="Price" value={totalPrice} />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '24px' }}>
-              <input type="email" name="email" required placeholder="Your Email" value={email} onChange={(e) => setEmail(e.target.value)} style={{ padding: '16px', backgroundColor: '#0f172a', border: '1px solid #1e293b', color: 'white', borderRadius: '12px' }} />
-              <input type="tel" name="phone" required placeholder="Target Phone" value={phone} onChange={(e) => setPhone(e.target.value)} style={{ padding: '16px', backgroundColor: '#0f172a', border: '1px solid #1e293b', color: 'white', borderRadius: '12px' }} />
-            </div>
-            <div style={{ backgroundColor: '#4f46e5', padding: '32px', borderRadius: '24px', marginTop: '32px', textAlign: 'center' }}>
-               <div style={{ fontSize: '56px', fontWeight: '900' }}>${totalPrice}</div>
-               <button type="submit" style={{ width: '100%', padding: '16px', backgroundColor: 'white', color: '#4f46e5', borderRadius: '12px', border: 'none', fontWeight: '900', marginTop: '16px' }}>DEPLOY</button>
+            <input type="hidden" name="Price" value={total} />
+            <input type="email" name="email" required placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} style={{ width: '100%', padding: '15px', marginBottom: '10px', backgroundColor: '#0f172a', border: '1px solid #1e293b', color: 'white', borderRadius: '10px' }} />
+            <input type="tel" name="phone" required placeholder="Phone" value={phone} onChange={e => setPhone(e.target.value)} style={{ width: '100%', padding: '15px', marginBottom: '20px', backgroundColor: '#0f172a', border: '1px solid #1e293b', color: 'white', borderRadius: '10px' }} />
+
+            <div style={{ backgroundColor: '#4f46e5', padding: '30px', borderRadius: '20px', textAlign: 'center' }}>
+               <div style={{ fontSize: '40px', fontWeight: '900' }}>${total}</div>
+               <button type="submit" style={{ width: '100%', padding: '15px', backgroundColor: 'white', color: '#4f46e5', border: 'none', borderRadius: '10px', fontWeight: 'bold', marginTop: '10px' }}>DEPLOY</button>
             </div>
           </form>
         )}
+
       </div>
     </div>
   );
