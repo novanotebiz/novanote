@@ -26,10 +26,10 @@ export default function App() {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
+      const response = await fetch("https://formspree.io/f/" + FORMSPREE_ID, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, phone, tier, timing, time, total: `$${total}` })
+        body: JSON.stringify({ email, phone, tier, timing, time, total: "$" + total })
       });
       if (response.ok) { setSent(true); } 
       else { alert("ID Error. Check your Formspree code."); }
