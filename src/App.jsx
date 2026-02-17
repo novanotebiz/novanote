@@ -1,7 +1,7 @@
-// @ts-nocheck
 import React, { useState } from 'react';
 
 export default function App() {
+  // CONFIG - Replace YOUR_ID_HERE with your Formspree ID
   const FORMSPREE_ID = "https://formspree.io/f/maqdywan";
   const spotsLeft = 12;
 
