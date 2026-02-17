@@ -14,7 +14,7 @@ export default function App() {
   const [time, setTime] = useState('');
 
   // Pricing Logic
-  const prices = { 
+  const prices: Record<string, number> = { 
     spark: 1, 
     blast: 5, 
     anytime: 0, 
@@ -163,4 +163,3 @@ export default function App() {
     </div>
   );
 }
-
