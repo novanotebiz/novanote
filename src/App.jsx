@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
+import { Shield, Zap, Target, Clock, ArrowRight, ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react';
 
 export default function App() {
-  // --- 1. CONFIGURATION ---
-  const FORMSPREE_ID = "https://formspree.io/f/maqdywan";
+  // --- 1. CONFIGURATION (INTEGRATED) ---
+  const FORMSPREE_ID = "maqdywan";
   
-  // Create these 5 links in Stripe and paste them here:
   const STRIPE_LINKS = {
     1: "https://buy.stripe.com/5kQ7sL5LQbJIbc09nxfQI02",
     2: "https://buy.stripe.com/00w9ATb6a4hg2FugPZfQI03",
@@ -25,7 +25,17 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
 
-  // --- 3. PRICING LOGIC ---
+  // --- 3. DYNAMIC CONTENT LOGIC ---
+  const getMissionDescription = () => {
+    const payloadText = tier === 'spark' ? "The Spark (25 rapid celebration texts)" : "The Blast (100+ texts + emoji storm)";
+    let timingText = "";
+    if (timing === 'anytime') timingText = "delivered within 24 hours.";
+    if (timing === 'window') timingText = "delivered within a priority 2-hour window.";
+    if (timing === 'exact') timingText = "delivered at a precise, specified minute.";
+    
+    return `${payloadText} ${timingText}`;
+  };
+
   const calculateTotal = () => {
     let base = tier === 'blast' ? 5 : 1;
     let extra = 0;
@@ -33,103 +43,250 @@ export default function App() {
     if (timing === 'exact') extra = 5;
     return base + extra;
   };
-  const total = calculateTotal();
 
-  // --- 4. SUBMISSION ---
+  const total = calculateTotal();
+  const missionDescription = getMissionDescription();
+
+  // --- 4. SUBMISSION & REDIRECT ---
   const deploy = async (e) => {
     e.preventDefault();
     setLoading(true);
     
     try {
-      // Send data to Formspree first so you have the order info
-      await fetch("https://formspree.io/f/" + FORMSPREE_ID, {
+      // Step A: Send logistics to Formspree
+      await fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          email, phone, tier, timing, time, 
-          total: "$" + total,
-          payment_status: "REDIRECTED_TO_STRIPE" 
+          email, 
+          phone, 
+          mission_summary: missionDescription,
+          target_time: time || "Anytime",
+          total_price: `$${total}`,
+          payment_status: "AWAITING_STRIPE_COMPLETION" 
         })
       });
 
-      // Redirect based on the calculated total
+      // Step B: Transition to Stripe Redirect
       setRedirecting(true);
       const targetLink = STRIPE_LINKS[total];
       
+      // Brief delay for visual confirmation
       setTimeout(() => {
         window.location.href = targetLink;
-      }, 1200);
+      }, 1500);
 
     } catch (err) {
-      alert("Network error. Please try again.");
+      alert("Network error. Logistics could not be transmitted. Please check your connection.");
       setLoading(false);
     }
   };
 
+  // --- LOADING / REDIRECT VIEW ---
   if (redirecting) return (
-    <div style={{ backgroundColor: '#020617', color: 'white', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '20px', fontFamily: 'sans-serif' }}>
-      <div style={{ fontSize: '50px', marginBottom: '20px' }}>🔒</div>
-      <h1 style={{ fontSize: '32px', fontWeight: '900', marginBottom: '10px' }}>SECURE CHECKOUT</h1>
-      <p style={{ color: '#94a3b8' }}>Forwarding to Stripe for your ${total} payment...</p>
+    <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-6 text-center font-sans">
+      <div className="relative mb-8">
+        <Shield className="w-20 h-20 text-indigo-500 animate-pulse" />
+        <CheckCircle2 className="w-8 h-8 text-emerald-500 absolute -bottom-1 -right-1 bg-slate-950 rounded-full" />
+      </div>
+      <h1 className="text-4xl font-black italic mb-2 tracking-tighter uppercase">Logistics Secured</h1>
+      <p className="text-slate-400 mb-8 max-w-xs leading-relaxed">
+        Transmission successful. Forwarding to Stripe for your <span className="text-white font-bold">${total}</span> secure payment...
+      </p>
+      <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
     </div>
   );
 
   return (
-    <div style={{ backgroundColor: '#020617', color: 'white', minHeight: '100vh', fontFamily: 'sans-serif', padding: '20px' }}>
-      <div style={{ maxWidth: '400px', margin: '0 auto' }}>
+    <div className="min-h-screen bg-slate-950 text-slate-50 font-sans p-6 selection:bg-indigo-500/30">
+      <div className="max-w-md mx-auto">
         
-        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '20px 0', alignItems: 'center' }}>
-          <div style={{ fontWeight: 'bold', fontSize: '22px', fontStyle: 'italic' }}>⚡ NOVANOTE</div>
-          <div style={{ fontSize: '10px', color: '#818cf8', border: '1px solid #312e81', padding: '4px 10px', borderRadius: '20px' }}>{spotsLeft} SPOTS LEFT</div>
-        </div>
+        {/* Header */}
+        <header className="flex justify-between items-center py-8 mb-4">
+          <div className="flex items-center gap-2 group cursor-default">
+            <Zap className="w-7 h-7 text-indigo-500 fill-indigo-500 group-hover:scale-110 transition-transform" />
+            <span className="font-black text-2xl italic tracking-tighter">NOVANOTE</span>
+          </div>
+          <div className="text-[10px] font-bold bg-indigo-950/50 text-indigo-400 px-3 py-1.5 rounded-full border border-indigo-500/30 tracking-widest uppercase">
+            {spotsLeft} SPOTS LEFT
+          </div>
+        </header>
 
+        {/* STEP 1: SELECT PAYLOAD */}
         {step === 1 && (
-          <div>
-            <h1 style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '20px' }}>THE PAYLOAD</h1>
-            <button onClick={() => setTier('spark')} style={{ width: '100%', padding: '20px', marginBottom: '10px', borderRadius: '15px', border: tier === 'spark' ? '2px solid #6366f1' : '1px solid #1e293b', backgroundColor: tier === 'spark' ? '#6366f11a' : '#0f172a', color: 'white', textAlign: 'left' }}>
-               <div style={{fontWeight: 'bold'}}>The Spark ($1)</div>
-               <div style={{fontSize: '12px', color: '#94a3b8'}}>25 rapid celebration texts</div>
+          <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
+            <h1 className="text-5xl font-black italic tracking-tighter mb-2 uppercase leading-[0.9]">The Payload</h1>
+            <p className="text-slate-400 mb-10 text-lg">Choose your celebration volume level.</p>
+            
+            <div className="space-y-4 mb-10">
+              <button 
+                onClick={() => setTier('spark')}
+                className={`w-full p-6 rounded-3xl border-2 text-left transition-all duration-300 group relative overflow-hidden ${tier === 'spark' ? 'border-indigo-500 bg-indigo-500/10 shadow-[0_0_30px_-10px_rgba(99,102,241,0.3)]' : 'border-slate-800 bg-slate-900/40 hover:border-slate-700'}`}
+              >
+                <div className="flex justify-between items-start mb-2 relative z-10">
+                  <span className={`text-2xl font-black italic ${tier === 'spark' ? 'text-indigo-400' : 'text-slate-500'}`}>SPARK</span>
+                  <span className="text-2xl font-black text-white">$1</span>
+                </div>
+                <p className="text-sm text-slate-400 relative z-10 leading-relaxed">25 rapid-fire celebration texts sent immediately to the recipient.</p>
+                {tier === 'spark' && <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-3xl -mr-16 -mt-16 rounded-full" />}
+              </button>
+
+              <button 
+                onClick={() => setTier('blast')}
+                className={`w-full p-6 rounded-3xl border-2 text-left transition-all duration-300 group relative overflow-hidden ${tier === 'blast' ? 'border-amber-500 bg-amber-500/10 shadow-[0_0_30px_-10px_rgba(245,158,11,0.3)]' : 'border-slate-800 bg-slate-900/40 hover:border-slate-700'}`}
+              >
+                <div className="flex justify-between items-start mb-2 relative z-10">
+                  <span className={`text-2xl font-black italic ${tier === 'blast' ? 'text-amber-500' : 'text-slate-500'}`}>BLAST</span>
+                  <span className="text-2xl font-black text-white">$5</span>
+                </div>
+                <p className="text-sm text-slate-400 relative z-10 leading-relaxed">100+ celebration texts plus a curated high-intensity emoji storm.</p>
+                {tier === 'blast' && <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 blur-3xl -mr-16 -mt-16 rounded-full" />}
+              </button>
+            </div>
+            
+            <button 
+              onClick={() => setStep(2)}
+              className="w-full py-6 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black text-xl shadow-2xl shadow-indigo-600/30 active:scale-[0.97] transition-all flex items-center justify-center gap-3"
+            >
+              SET MISSION TIMING <ArrowRight className="w-6 h-6" />
             </button>
-            <button onClick={() => setTier('blast')} style={{ width: '100%', padding: '20px', marginBottom: '20px', borderRadius: '15px', border: tier === 'blast' ? '2px solid #6366f1' : '1px solid #1e293b', backgroundColor: tier === 'blast' ? '#6366f11a' : '#0f172a', color: 'white', textAlign: 'left' }}>
-               <div style={{fontWeight: 'bold'}}>The Blast ($5)</div>
-               <div style={{fontSize: '12px', color: '#94a3b8'}}>100+ texts + emoji storm</div>
-            </button>
-            <button onClick={() => setStep(2)} style={{ width: '100%', padding: '15px', backgroundColor: '#4f46e5', border: 'none', borderRadius: '10px', color: 'white', fontWeight: 'bold' }}>NEXT</button>
           </div>
         )}
 
+        {/* STEP 2: TIMING */}
         {step === 2 && (
-          <div>
-            <h1 style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '20px' }}>TIMING</h1>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
-              <button onClick={() => setTiming('anytime')} style={{ padding: '15px', borderRadius: '10px', border: timing === 'anytime' ? '2px solid #6366f1' : '1px solid #1e293b', backgroundColor: '#0f172a', color: 'white' }}>Standard (Free)</button>
-              <button onClick={() => setTiming('window')} style={{ padding: '15px', borderRadius: '10px', border: timing === 'window' ? '2px solid #6366f1' : '1px solid #1e293b', backgroundColor: '#0f172a', color: 'white' }}>Window (+$1)</button>
-              <button onClick={() => setTiming('exact')} style={{ padding: '15px', borderRadius: '10px', border: timing === 'exact' ? '2px solid #6366f1' : '1px solid #1e293b', backgroundColor: '#0f172a', color: 'white' }}>Exact Moment (+$5)</button>
+          <div className="animate-in fade-in slide-in-from-right-8 duration-500">
+            <h1 className="text-5xl font-black italic tracking-tighter mb-10 uppercase leading-[0.9]">Timing</h1>
+            <div className="space-y-4 mb-10">
+              {[
+                { id: 'anytime', label: 'Standard Delivery', sub: 'Within 24 hours', price: 'FREE', icon: Clock },
+                { id: 'window', label: 'Priority Window', sub: '2-hour block', price: '+$1', icon: Clock },
+                { id: 'exact', label: 'Exact Moment', sub: 'Precise Minute', price: '+$5', icon: Target }
+              ].map((t) => (
+                <button 
+                  key={t.id} 
+                  onClick={() => setTiming(t.id)} 
+                  className={`w-full p-6 rounded-2xl border-2 flex justify-between items-center transition-all duration-300 ${timing === t.id ? 'border-indigo-500 bg-indigo-500/10' : 'border-slate-800 bg-slate-900/40'}`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`p-2 rounded-lg ${timing === t.id ? 'bg-indigo-500/20 text-indigo-400' : 'bg-slate-800 text-slate-500'}`}>
+                      <t.icon className="w-5 h-5" />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-bold text-lg text-white leading-tight">{t.label}</div>
+                      <div className="text-[10px] text-slate-500 uppercase font-black tracking-widest mt-0.5">{t.sub}</div>
+                    </div>
+                  </div>
+                  <span className={`font-black text-lg ${timing === t.id ? 'text-indigo-400' : 'text-slate-700'}`}>{t.price}</span>
+                </button>
+              ))}
             </div>
+
             {timing !== 'anytime' && (
-              <input type="time" value={time} onChange={e => setTime(e.target.value)} style={{ width: '100%', padding: '15px', backgroundColor: '#0f172a', border: '1px solid #1e293b', color: 'white', borderRadius: '10px', marginBottom: '20px' }} />
+              <div className="mb-10 p-1 animate-in fade-in zoom-in-95 duration-300">
+                <label className="text-[11px] font-black text-indigo-400 uppercase tracking-widest mb-3 block px-2">Specify Target Time</label>
+                <input 
+                  type="time" 
+                  value={time} 
+                  onChange={e => setTime(e.target.value)} 
+                  className="w-full p-5 bg-slate-900 border-2 border-slate-800 rounded-2xl text-white text-3xl font-black outline-none focus:border-indigo-500 transition-all text-center shadow-inner" 
+                />
+              </div>
             )}
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={() => setStep(1)} style={{ flex: 1, padding: '15px', backgroundColor: '#1e293b', color: 'white', border: 'none', borderRadius: '10px' }}>BACK</button>
-              <button onClick={() => setStep(3)} style={{ flex: 2, padding: '15px', backgroundColor: '#4f46e5', border: 'none', borderRadius: '10px', color: 'white', fontWeight: 'bold' }}>LOGISTICS</button>
+
+            <div className="flex gap-4">
+              <button 
+                onClick={() => setStep(1)} 
+                className="flex-1 py-6 bg-slate-900 border border-slate-800 text-slate-500 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" /> BACK
+              </button>
+              <button 
+                onClick={() => setStep(3)} 
+                className="flex-[2] py-6 bg-indigo-600 text-white rounded-2xl font-black text-xl flex items-center justify-center gap-3 shadow-2xl shadow-indigo-600/30 active:scale-[0.97] transition-all"
+              >
+                CONTINUE <ArrowRight className="w-6 h-6" />
+              </button>
             </div>
           </div>
         )}
 
+        {/* STEP 3: LOGISTICS */}
         {step === 3 && (
-          <form onSubmit={deploy}>
-            <h1 style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '20px' }}>LOGISTICS</h1>
-            <input type="email" required placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} style={{ width: '100%', padding: '15px', marginBottom: '10px', backgroundColor: '#0f172a', border: '1px solid #1e293b', color: 'white', borderRadius: '10px' }} />
-            <input type="tel" required placeholder="Phone" value={phone} onChange={e => setPhone(e.target.value)} style={{ width: '100%', padding: '15px', marginBottom: '20px', backgroundColor: '#0f172a', border: '1px solid #1e293b', color: 'white', borderRadius: '10px' }} />
-            <div style={{ backgroundColor: '#4f46e5', padding: '30px', borderRadius: '20px', textAlign: 'center' }}>
-               <div style={{ fontSize: '50px', fontWeight: '900', marginBottom: '10px' }}>${total}</div>
-               <button disabled={loading} type="submit" style={{ width: '100%', padding: '15px', backgroundColor: 'white', color: '#4f46e5', border: 'none', borderRadius: '10px', fontWeight: 'bold' }}>
-                 {loading ? "TRANSMITTING..." : "PAY & DEPLOY"}
-               </button>
+          <form onSubmit={deploy} className="animate-in fade-in slide-in-from-right-8 duration-500">
+            <h1 className="text-5xl font-black italic tracking-tighter mb-10 uppercase text-white leading-[0.9]">Logistics</h1>
+            
+            <div className="space-y-5 mb-10">
+              <div className="group">
+                <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest mb-2 block px-1 group-focus-within:text-indigo-400 transition-colors">Your Confirmation Email</label>
+                <input 
+                  type="email" 
+                  required 
+                  placeholder="commander@example.com" 
+                  value={email} 
+                  onChange={e => setEmail(e.target.value)} 
+                  className="w-full p-5 bg-slate-900 border border-slate-800 rounded-2xl text-white outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder:text-slate-800" 
+                />
+              </div>
+              <div className="group">
+                <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest mb-2 block px-1 group-focus-within:text-indigo-400 transition-colors">Target Phone Number</label>
+                <input 
+                  type="tel" 
+                  required 
+                  placeholder="+1 (555) 000-0000" 
+                  value={phone} 
+                  onChange={e => setPhone(e.target.value)} 
+                  className="w-full p-5 bg-slate-900 border border-slate-800 rounded-2xl text-white outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder:text-slate-800" 
+                />
+              </div>
+            </div>
+            
+            <div className="bg-slate-900/60 border border-slate-800 p-6 rounded-[2rem] mb-10 relative overflow-hidden">
+              <div className="text-[11px] font-black text-indigo-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                <Shield className="w-4 h-4" /> Mission Summary
+              </div>
+              <div className="text-base font-bold text-slate-200 leading-relaxed italic pr-4">
+                "{missionDescription}"
+              </div>
+              <div className="absolute top-0 right-0 p-4 opacity-5">
+                <Zap className="w-16 h-16" />
+              </div>
+            </div>
+
+            <div className="bg-indigo-600 p-10 rounded-[3rem] text-center shadow-[0_30px_60px_-15px_rgba(79,102,241,0.5)] border border-indigo-400/30 relative overflow-hidden group">
+               <div className="absolute -top-10 -right-10 opacity-10 group-hover:rotate-12 transition-transform duration-700">
+                 <Zap className="w-40 h-40 fill-white" />
+               </div>
+               
+               <div className="relative z-10">
+                 <div className="text-[12px] font-black opacity-70 uppercase tracking-[0.2em] mb-2">Deployment Fee</div>
+                 <div className="text-8xl font-black italic tracking-tighter mb-10 leading-none drop-shadow-lg">${total}</div>
+                 
+                 <button 
+                   disabled={loading} 
+                   type="submit" 
+                   className="w-full py-5 bg-white text-indigo-600 rounded-[1.5rem] font-black text-2xl flex items-center justify-center gap-4 active:scale-95 transition-all shadow-xl disabled:opacity-50"
+                 >
+                   {loading ? (
+                     <>
+                      <Loader2 className="w-7 h-7 animate-spin" /> TRANSMITTING...
+                     </>
+                   ) : (
+                     <>
+                      PAY & DEPLOY <Zap className="w-7 h-7 fill-indigo-600" />
+                     </>
+                   )}
+                 </button>
+               </div>
             </div>
           </form>
         )}
       </div>
+      
+      {/* Footer Branding */}
+      <footer className="max-w-md mx-auto mt-12 mb-8 text-center">
+        <p className="text-[10px] font-black text-slate-700 uppercase tracking-[0.3em]">Encrypted Connection • Secure via Stripe</p>
+      </footer>
     </div>
   );
-        }
+}
