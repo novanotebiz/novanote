@@ -1,22 +1,271 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    
-    <!-- This is what shows up in the browser tab and Google -->
-    <title>NovaNote | The Digital Barrage Service</title>
-    <meta name="description" content="Deploy a high-intensity celebration barrage. 25 texts in 10 seconds. Make their phone explode with vibes.">
-    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOVANOTE | Digital Barrage</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,700;0,900;1,900&display=swap" rel="stylesheet">
     <style>
-      /* Custom font for that premium tech feel */
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-      body { font-family: 'Inter', sans-serif; }
+        :root {
+            --brand-color: #5850ec;
+            --bg-dark: #07080f;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            font-family: 'Inter', sans-serif;
+            color: white;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        .italic-heavy {
+            font-weight: 900;
+            font-style: italic;
+            letter-spacing: -0.05em;
+            line-height: 0.85;
+        }
+
+        .brand-bg { background-color: var(--brand-color); }
+        
+        .phone-mockup {
+            background: #000;
+            border: 8px solid #1a1a1a;
+            border-radius: 3.5rem;
+            height: 520px;
+            width: 270px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .dynamic-island {
+            width: 60px;
+            height: 18px;
+            background: #000;
+            border-radius: 20px;
+            margin: 10px auto;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        @keyframes messagePop {
+            0% { transform: scale(0.8) translateY(10px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        .message-bubble {
+            animation: messagePop 0.2s ease-out forwards;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .fade-bottom {
+            background: linear-gradient(to top, #000, transparent);
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
-  </head>
-  <body class="bg-slate-950">
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- Header -->
+    <header class="p-8 max-w-xl mx-auto w-full flex items-center space-x-2">
+        <div class="brand-bg p-1.5 rounded-lg">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+        </div>
+        <span class="text-2xl font-black italic tracking-tighter uppercase">NOVANOTE</span>
+    </header>
+
+    <main class="flex-grow px-6 pt-4 pb-20 max-w-xl mx-auto w-full space-y-12">
+        
+        <!-- Hero Section -->
+        <div class="space-y-4">
+            <h2 class="text-[5.5rem] italic-heavy uppercase leading-none tracking-tighter">
+                DIGITAL <br>
+                <span class="opacity-20">BARRAGE</span>
+            </h2>
+            <div class="space-y-1 mt-6">
+                <p class="text-gray-400 text-lg italic font-bold">"25 celebration texts in 10 seconds."</p>
+                <p class="text-gray-500 text-lg leading-tight font-light tracking-tight italic">Launch a phone explosion they'll never forget.</p>
+            </div>
+        </div>
+
+        <!-- Primary Action -->
+        <div class="space-y-4">
+            <button onclick="playNotification()" class="w-full brand-bg text-white py-8 rounded-[2.5rem] flex items-center justify-center space-x-4 group shadow-2xl transition-all active:scale-95">
+                <span class="text-3xl font-black italic uppercase tracking-tight">Start Barrage</span>
+                <svg class="w-8 h-8 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                </svg>
+            </button>
+
+            <!-- 🔒 TWILIO MANDATORY COMPLIANCE -->
+            <div class="bg-white/5 p-5 rounded-3xl border border-white/5">
+                <div class="flex items-start space-x-4">
+                    <input type="checkbox" id="consent" class="mt-1 h-5 w-5 rounded bg-black border-white/10 accent-indigo-500 cursor-pointer">
+                    <label for="consent" class="text-[10px] text-gray-500 uppercase font-bold leading-normal tracking-wide select-none cursor-pointer">
+                        I agree to receive automated celebratory SMS from NovaNote. I have the recipient's permission. Reply STOP to cancel.
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- 📱 THE LIVE SIMULATION -->
+        <div class="space-y-8 pt-6">
+            <div class="flex justify-between items-center px-2">
+                <h3 class="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500">Live Recipient Simulation</h3>
+                <button onclick="toggleMute()" id="mute-btn" class="text-gray-500 hover:text-white transition-colors">
+                    <svg id="speaker-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Categories -->
+            <div class="flex space-x-3 overflow-x-auto pb-2 no-scrollbar">
+                <button onclick="changeCategory('birthday')" id="btn-birthday" class="category-btn brand-bg flex-shrink-0 px-8 py-3.5 rounded-full text-[10px] font-black uppercase italic tracking-widest shadow-lg">Birthday</button>
+                <button onclick="changeCategory('congrats')" id="btn-congrats" class="category-btn bg-white/5 flex-shrink-0 px-8 py-3.5 rounded-full text-[10px] font-black uppercase tracking-widest text-gray-500">Congrats</button>
+                <button onclick="changeCategory('prank')" id="btn-prank" class="category-btn bg-white/5 flex-shrink-0 px-8 py-3.5 rounded-full text-[10px] font-black uppercase tracking-widest text-gray-500">Prank</button>
+            </div>
+
+            <!-- TEST SOUNDS BUTTON -->
+            <button onclick="playNotification(); enableAudio();" class="w-full bg-white/5 border border-white/10 py-5 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] text-white hover:bg-white/10 transition-all">
+                Test Sounds
+            </button>
+
+            <!-- THE PHONE MOCKUP -->
+            <div class="flex justify-center">
+                <div class="phone-mockup">
+                    <div class="dynamic-island"></div>
+                    <div class="text-center pt-8 pb-4">
+                        <div class="text-[4.5rem] font-light leading-none tracking-tighter text-white/90">9:41</div>
+                        <div class="text-[10px] font-medium text-white/40 mt-1 uppercase tracking-[0.2em]">Wednesday, Feb 18</div>
+                    </div>
+                    <div id="sim-feed" class="px-5 space-y-2 pb-20"></div>
+                    <div class="absolute bottom-0 left-0 w-full h-32 fade-bottom pointer-events-none"></div>
+                    <div class="absolute bottom-12 w-full text-center">
+                        <p class="text-[8px] text-gray-800 font-black uppercase tracking-[0.5em]">NovaNote Messaging Service</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 🔒 LEGAL FOOTER -->
+    <footer class="mt-auto border-t border-white/5 bg-black p-10 space-y-8">
+        <div class="max-w-xl mx-auto grid grid-cols-2 gap-8 text-left">
+            <div class="space-y-3">
+                <h4 class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Privacy Policy</h4>
+                <p class="text-[9px] text-gray-600 leading-normal uppercase font-bold tracking-tighter">Data used for delivery only. No logs stored beyond 24h. No marketing.</p>
+            </div>
+            <div class="space-y-3">
+                <h4 class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Terms of Use</h4>
+                <p class="text-[9px] text-gray-600 leading-normal uppercase font-bold tracking-tighter">Celebratory use only. Harassment strictly prohibited. Account bans are final.</p>
+            </div>
+        </div>
+        <div class="text-center text-[9px] text-gray-800 tracking-[0.6em] font-black uppercase">© 2026 NOVANOTE BIZ INC.</div>
+    </footer>
+
+    <script>
+        const feed = document.getElementById('sim-feed');
+        let audioCtx = null;
+        let isMuted = true;
+
+        const messagePool = {
+            birthday: ["HAPPY BIRTHDAY!!! 🎂🎈", "IT'S TIME TO CELEBRATE!! 🚀", "ANOTHER ONE!! 💥", "LET'S GOOOOO!!! 🎊", "CAKE TIME!! 🍰✨"],
+            congrats: ["YOU DID IT!!! 🎓🏆", "MASSIVE WIN!! 🌟", "CONGRATULATIONS!! 🎉", "SO PROUD OF YOU!! ❤️", "NEXT LEVEL UNLOCKED! 🚀"],
+            prank: ["WAKE UP!!! ⏰🚨", "HELLO?? HELLO?? 📱", "BARRAGE INCOMING!! ⚡️", "YOU'VE BEEN TARGETED! 🎯", "DON'T EVEN TRY TO STOP IT! 🛑"]
+        };
+
+        let currentCategory = 'birthday';
+        let loopInterval;
+
+        // Initialize Web Audio API
+        function enableAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            isMuted = false;
+            updateMuteUI();
+        }
+
+        function playNotification() {
+            if (!audioCtx || isMuted) return;
+            
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, audioCtx.currentTime); // High pitch "ding"
+            osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.1);
+            
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.2);
+        }
+
+        function toggleMute() {
+            if (!audioCtx) enableAudio();
+            isMuted = !isMuted;
+            updateMuteUI();
+        }
+
+        function updateMuteUI() {
+            const btn = document.getElementById('mute-btn');
+            const icon = document.getElementById('speaker-icon');
+            if (isMuted) {
+                btn.className = "text-gray-500 hover:text-white transition-colors";
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>';
+            } else {
+                btn.className = "text-brand-color brand-text transition-colors";
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>';
+            }
+        }
+
+        function startSimulation() {
+            if (loopInterval) clearInterval(loopInterval);
+            loopInterval = setInterval(addMessage, 1500);
+        }
+
+        function addMessage() {
+            const msgs = messagePool[currentCategory];
+            const bubble = document.createElement('div');
+            bubble.className = "message-bubble p-4 rounded-2xl rounded-bl-none max-w-[90%] text-[9px] font-black uppercase tracking-tight";
+            bubble.innerText = msgs[Math.floor(Math.random() * msgs.length)];
+            feed.appendChild(bubble);
+            
+            playNotification();
+
+            if (feed.children.length > 5) {
+                feed.removeChild(feed.firstChild);
+            }
+        }
+
+        function changeCategory(cat) {
+            currentCategory = cat;
+            feed.innerHTML = '';
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.className = "category-btn bg-white/5 flex-shrink-0 px-8 py-3.5 rounded-full text-[10px] font-black uppercase tracking-widest text-gray-500 transition-all";
+            });
+            document.getElementById(`btn-${cat}`).className = "category-btn brand-bg flex-shrink-0 px-8 py-3.5 rounded-full text-[10px] font-black uppercase italic tracking-widest transition-all shadow-lg";
+            startSimulation();
+        }
+
+        window.onload = startSimulation;
+    </script>
+
+</body>
 </html>
